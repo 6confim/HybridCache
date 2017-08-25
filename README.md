@@ -14,37 +14,49 @@
 1. 同一个页面app内部和Web上同时能够使用
 2. 成本更低，比如Server端最好不要改动
 3. 希望能够收获更好的效果，能够解决的偶尔快，偶尔慢的问题
-4. 更新能够相对很及时
+4. App更新能够相对及时一些，不要造成页面不一致的情况
 
 
 ### 思路
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
+当面对该问题的时候，第一个想到的时候manifest问题，考虑使用浏览器的offline cache的能力，这个方法面临最严重的问题有两个    
 
-```markdown
-Syntax highlighted code block
+1. 如果使用manifest这种方式，该配置会对整个环境生效，不仅仅app内部的webview，各种浏览器也有效
+2. manifest很多bug，浏览器支持情况也很不好，如果使用了很可能造成页面更新不了的情况
+3. 需要增加工作量和风险
 
-# Header 1
-## Header 2
-### Header 3
+这种方案放弃了。    
 
-- Bulleted
-- List
 
-1. Numbered
-2. List
+另一种方案是基于 VasSonic 的基础上，VasSonic做了很多优化，但是使用APP的request而不是使用webview的request可以加速页面的加载，
+另外使用预先DNS解析也剩下了一部分时间，等等很多。很多优化我们都可以直接拿来用。 
 
-**Bold** and _Italic_ and `Code` text
+我们的思路就变成了：
+1. css、js、图片等静态资源使用webview的缓存来进行
+2. 当html页面加载完成后我们使用native的能力进行缓存，下次直接先从缓存中读取
+3. 当app启动或者进入活动状态的时候我们检查更新
+4. 每次先从缓存读取显示，然后后台更新html页面
 
-[Link](url) and ![Image](src)
-```
+这种方式基本上解决几个问题：
+1. 除了第一次页面基本上显示不受网络影响
+2. 即使server给的html页面是动态的，也能相对及时的更新
+3. 现有的server和现有的前端工作量基本上不变
+4. 离线也可以展示内容
 
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
+但是这种思路引出了一些问题：
+1. 如果页面更新频繁，用户会有可能，多看一次更新前的页面，个人觉得影响不是很大，就行不刷新页面看不到新的更新内容一样
+2. app需要消耗更多的资源，只是用户不可感知罢了
 
-### Jekyll Themes
+针对这些问题我们可以增加如下两种思路缓解：
+1. 增加页面更新通知，让APP主动更新已经cache的页面（如果页面数据都是ajax获取的话，只需在html发布新版的时候，给app发通知即可）另外app只需更新已经缓存的页面量并不是很大
+2. 增加雨缓存配置，在app第一次启动后，更新需要预cache的页面可能只是app内需要打开的某几个页面
 
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/dshaobin/HybridCache/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
+这样极大的减少了app打开旧页面的概率，但是也增加了app预加载的数量，如果app使用周期比较长，这几个页面的流量只有html页面并不是很大。
 
-### Support or Contact
 
-Having trouble with Pages? Check out our [documentation](https://help.github.com/categories/github-pages-basics/) or [contact support](https://github.com/contact) and we’ll help you sort it out.
+### 总结
+
+该方案只是理论上感觉很不错，但是需要实际验证，犹豫现在时间比较紧张，后续做成IOS和android的sdk，只需要配置就可以使用。如果谁的工作量不包含的话可以先开发一版试试看！
+
+
+
