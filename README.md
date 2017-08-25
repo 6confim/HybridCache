@@ -12,10 +12,12 @@
 ### 面临的问题
 
 1. 同一个页面app内部和Web上同时能够使用
-2. app
+2. 成本更低，比如Server端最好不要改动
+3. 希望能够收获更好的效果，能够解决的偶尔快，偶尔慢的问题
+4. 更新能够相对很及时
 
 
-### 问题
+### 思路
 
 Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
 
